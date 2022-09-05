@@ -57,6 +57,9 @@ class Navigator():
                 self.rate.sleep()
 
             # Now the robot has reached the goal !
+            vel_msg.angular.z = 0
+            vel_msg.linear.x = 0
+            self.vel_publisher.publish(vel_msg)
             rospy.loginfo("Goal is reached !")
             self.going_to_goal = False
 
