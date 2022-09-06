@@ -16,7 +16,6 @@ class Navigator():
         self.rate = rospy.Rate(10) # 10hz
         self.pos_with_co = PoseWithCovariance()
         self.pos = Pose()
-        self.rate = rospy.Rate(5)
         self.going_to_goal = False
 
     def update_pos(self, odom_data):
