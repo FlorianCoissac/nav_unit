@@ -12,6 +12,7 @@ class Navigator():
     def __init__(self):
         rospy.init_node('navigator', anonymous=True)
         self.vel_publisher = rospy.Publisher('cmd_vel/managed', Twist, queue_size=1)
+        self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_pos)
         self.rate = rospy.Rate(10) # 10hz
         self.pos_with_co = PoseWithCovariance()
         self.pos = Pose()
@@ -34,7 +35,7 @@ class Navigator():
                 roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 Dx = goal.position.x - self.pos.position.x
                 Dy = goal.position.y - self.pos.position.y
-                Da = self.transfo2pipi(arctan2(Dy, Dx) - yaw - self.init_yaw)
+                Da = self.transfo2pipi(arctan2(Dy, Dx) - yaw)
                 if Da**2 > (pi/6)**2: # If the angle difference is too large, turn without going forward
                     rospy.loginfo("Turning " + str(Da*180/pi) + " degrees")
                     vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
@@ -52,13 +53,13 @@ class Navigator():
             roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
             explicit_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
             goal_roll, goal_pitch, goal_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
-            Da = self.transfo2pipi(goal_yaw - yaw - self.init_yaw)
+            Da = goal_yaw - yaw
             while Da**2>0.01 and not rospy.is_shutdown():
                 explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
                 roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 explicit_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
                 goal_roll, goal_pitch, goal_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
-                Da = self.transfo2pipi(goal_yaw - yaw - self.init_yaw)
+                Da = self.transfo2pipi(goal_yaw - yaw)
                 rospy.loginfo("Reorienting : " + str(Da*180/pi) + "degrees")
                 vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
                 vel_msg.linear.x = 0
@@ -77,9 +78,6 @@ class Navigator():
         if True in ['/imu' in tops for tops in rospy.get_published_topics()]:
             rospy.loginfo("Navigator is listening for goal input")
             rospy.Subscriber("goal", Pose, self.navigation)
-            explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
-            roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
-            self.init_yaw = yaw
             rospy.spin()
         else:
             rospy.loginfo("Odometry incomplete, please reconnect IMU sensor and execute 'roslaunch razor_imu_9dof razor-pub.launch' then try running Navigator.py again")
