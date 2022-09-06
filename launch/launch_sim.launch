@@ -1,0 +1,11 @@
+<launch>
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find roverrobotics_simulation)/launch/gazebo/4wd_rover_gazebo.launch"/>
+
+  <!-- Run a python script to start the navigator node -->
+  <node name="navigator" pkg="nav_unit" type="Navigator.py" respawn="true" output="screen">
+    <param name="is_sim" type="bool" value="true" />
+  </node>
+
+</launch>

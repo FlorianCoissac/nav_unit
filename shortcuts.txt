@@ -18,3 +18,5 @@ rostopic pub -1 /goal geometry_msgs/Pose '{position: {x: 0.0, y: 0.5, z: 0.0}, o
 Simulation tests :
 
 roslaunch roverrobotics_simulation 4wd_rover_gazebo.launch
+
+

@@ -10,7 +10,7 @@ import tf
 
 class Navigator():
     def __init__(self):
-        rospy.init_node('navigation', anonymous=True)
+        rospy.init_node('navigator', anonymous=True)
         self.vel_publisher = rospy.Publisher('cmd_vel/managed', Twist, queue_size=1)
         self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_pos)
         self.rate = rospy.Rate(10) # 10hz
@@ -73,14 +73,13 @@ class Navigator():
 
     def listen(self):
         if '/imu' in rospy.get_published_topics():
+            rospy.loginfo("Navigator is listening for goal input")
             rospy.Subscriber("goal", Pose, self.navigation)
             rospy.spin()
         else:
             rospy.loginfo("Odometry incomplete, please reconnect IMU sensor and execute 'roslaunch razor_imu_9dof razor-pub.launch' then try running Navigator.py again")
 
-if __name__ == '__main__':
-    try:
-        nav = Navigator()
-        nav.listen()
-    except rospy.ROSInterruptException:
-        pass
+
+nav = Navigator()
+nav.listen()
+
