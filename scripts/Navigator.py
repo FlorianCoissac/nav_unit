@@ -26,14 +26,16 @@ class Navigator():
     def navigation(self, goal):
         if not self.going_to_goal:
             self.going_to_goal = True
-            euler = tf.transformations.euler_from_quaternion(self.pos.orientation)
-            yaw = euler[2]
+            explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
+            roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
             # Init the Dx, Dy for the while loop check
             Dx = goal.position.x - self.pos.position.x
             Dy = goal.position.y - self.pos.position.y
             vel_msg = Twist()
             while (Dx**2+Dy**2)>0.01 and not rospy.is_shutdown():
                 # Compute the vector towards goal
+                explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
+                roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 Dx = goal.position.x - self.pos.position.x
                 Dy = goal.position.y - self.pos.position.y
                 Da = arctan2(Dy, Dx) - yaw
@@ -52,6 +54,8 @@ class Navigator():
             # At that point the position is correct, let's get to the right orientation
             Da = goal.orientation.z - yaw
             while Da**2>0.01 and not rospy.is_shutdown():
+                explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
+                roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 rospy.loginfo("Reorienting : " + str(Da*180/pi) + "degrees")
                 Da = goal.orientation.z - yaw
                 vel_msg.angular.z = min(Da, 1)
