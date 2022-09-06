@@ -4,11 +4,9 @@ roslaunch roverrobotics_driver zero2_teleop.launch
 
 roslaunch razor_imu_9dof razor-pub.launch
 
-rosrun nav_unit Odometer.py
-
 rosrun nav_unit Navigator.py
 
-rostopic echo odom_complete
+rostopic echo odom
 
 rostopic pub -1 /goal geometry_msgs/Pose '{position: {x: 0.0, y: 0.5, z: 0.0}, orientation: {x: 0.0,y: 0.0,z: 0.0}}'
 
@@ -18,5 +16,9 @@ rostopic pub -1 /goal geometry_msgs/Pose '{position: {x: 0.0, y: 0.5, z: 0.0}, o
 Simulation tests :
 
 roslaunch roverrobotics_simulation 4wd_rover_gazebo.launch
+
+rosrun nav_unit Navigator.py
+
+rostopic echo odom
 
 
