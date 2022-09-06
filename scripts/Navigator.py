@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # license removed for brevity
 import rospy
 from std_msgs.msg import String
@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseWithCovariance, Pose
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from numpy import arctan2, pi, sqrt, cos
+import tf
 
 class Navigator():
     def __init__(self):
@@ -25,6 +26,8 @@ class Navigator():
     def navigation(self, goal):
         if not self.going_to_goal:
             self.going_to_goal = True
+            euler = tf.transformations.euler_from_quaternion(self.pos.orientation)
+            yaw = euler[2]
             # Init the Dx, Dy for the while loop check
             Dx = goal.position.x - self.pos.position.x
             Dy = goal.position.y - self.pos.position.y
@@ -33,7 +36,7 @@ class Navigator():
                 # Compute the vector towards goal
                 Dx = goal.position.x - self.pos.position.x
                 Dy = goal.position.y - self.pos.position.y
-                Da = arctan2(Dy, Dx) - self.pos.orientation.z
+                Da = arctan2(Dy, Dx) - yaw
                 if Da**2 > (pi/6)**2: # If the angle difference is too large, turn without going forward
                     rospy.loginfo("Turning " + str(Da*180/pi) + " degrees")
                     vel_msg.angular.z = min(Da, 1)
@@ -47,10 +50,10 @@ class Navigator():
                 self.rate.sleep()
 
             # At that point the position is correct, let's get to the right orientation
-            Da = goal.orientation.z - self.pos.orientation.z
+            Da = goal.orientation.z - yaw
             while Da**2>0.01 and not rospy.is_shutdown():
                 rospy.loginfo("Reorienting : " + str(Da*180/pi) + "degrees")
-                Da = goal.orientation.z - self.pos.orientation.z
+                Da = goal.orientation.z - yaw
                 vel_msg.angular.z = min(Da, 1)
                 vel_msg.linear.x = 0
                 self.vel_publisher.publish(vel_msg)

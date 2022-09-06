@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # license removed for brevity
 import rospy
 from geometry_msgs.msg import PoseWithCovariance, Pose
@@ -20,32 +20,33 @@ class Odometer():
         self.got_new_imu=False
         self.previous_time = rospy.get_rostime().to_sec()
 
-    def update_odom(self, odom_data):
+    def update_odom(self, odom_data): # After updating odometry, broadcast()
         self.odumb_msg = odom_data
         self.broadcast()
 
-    def update_imu(self, imu_data):
+    def update_imu(self, imu_data): # Whenever a new orientation is published by the imu, get it
         self.imu_msg = imu_data
         self.got_new_imu = True
 
-    def broadcast(self):
+    def broadcast(self): # Publish odom_complete whenever odom is received
         now = rospy.get_rostime().to_sec()
         self.dt = now-self.previous_time
         self._previous_time = now
-        if self.got_new_imu:
+        if self.got_new_imu: # Update orientation in odom_cpomplete in ]-pi,pi]
             self.odom_complete_msg.pose.pose.orientation.z = self.imu_msg.yaw
         cur_vel = self.odumb_msg.twist.twist.linear.x
         yaw = self.odom_complete_msg.pose.pose.orientation.z
+        # Simple estimate for the updated position
         self.odom_complete_msg.pose.pose.position.x += cur_vel*cos(yaw)*self.dt
         self.odom_complete_msg.pose.pose.position.y += cur_vel*sin(yaw)*self.dt
         self.odom_publisher.publish(self.odom_complete_msg)
 
-    def listen(self):
+    def listen(self): # When odom is published, update_odom()
         self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_odom)
         rospy.spin()
             
 
-if __name__ == '__main__':
+if __name__ == '__main__': # On running script, start the Odometer node
     try:
         odometer = Odometer()
         # Do something
