@@ -72,8 +72,11 @@ class Navigator():
 
 
     def listen(self):
-        rospy.Subscriber("goal", Pose, self.navigation)
-        rospy.spin()
+        if '/imu' in rospy.get_published_topics():
+            rospy.Subscriber("goal", Pose, self.navigation)
+            rospy.spin()
+        else:
+            rospy.loginfo("Odometry incomplete, please reconnect IMU sensor and execute 'roslaunch razor_imu_9dof razor-pub.launch' then try running Navigator.py again")
 
 if __name__ == '__main__':
     try:
