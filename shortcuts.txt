@@ -1,24 +1,16 @@
 Real Rover tests : 
 
-roslaunch roverrobotics_driver zero2_teleop.launch
-
-roslaunch razor_imu_9dof razor-pub.launch
-
-rosrun nav_unit Navigator.py
-
-rostopic echo odom
-
+roslaunch nav_unit launch_real.launch
 rostopic pub -1 /goal geometry_msgs/Pose '{position: {x: 0.5, y: 0.0, z: 0.0}, orientation: {x: 0.0,y: 0.0,z: 0.0,w: 1.0}}'
-
-
 
 
 Simulation tests :
 
-roslaunch roverrobotics_simulation 4wd_rover_gazebo.launch
-
-rosrun nav_unit Navigator.py
-
-rostopic echo odom
+conda activate ros
+roslaunch nav_unit launch_sim.launch world_name:="test_world"
 
 
+Launch vb-tool : 
+
+conda activate vb-ws
+... (pack in a launch file or a few ones at least)

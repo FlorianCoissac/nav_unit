@@ -1,7 +1,9 @@
 <launch>
-
+  <arg name="world_name" default="empty_world"/>
   <!-- Launch the simulation -->
-  <include file="$(find roverrobotics_simulation)/launch/gazebo/4wd_rover_gazebo.launch"/>
+  <include file="$(find roverrobotics_simulation)/launch/gazebo/4wd_rover_gazebo.launch">
+    <arg name="world_name" value="$(find nav_unit)/gazebo_worlds/$(arg world_name).world" />
+  </include>
 
   <!-- Run a python script to start the navigator node -->
   <node name="navigator" pkg="nav_unit" type="Navigator.py" respawn="true" output="screen">
