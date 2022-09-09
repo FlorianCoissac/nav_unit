@@ -1,7 +1,7 @@
 <launch>
 
   <!-- Launch the real rover nodes and the imu node -->
-  <include file="$(find roverrobotics_driver)/launch/zero2.launch"/>
+  <include file="$(find roverrobotics_driver)/launch/zero2_teleop.launch"/>
   <include file="$(find razor_imu_9dof)/launch/razor-pub.launch"/>
 
   <!-- Run a python script to start the Odometer node -->
