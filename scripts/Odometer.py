@@ -61,6 +61,7 @@ class Odometer():
             self.odom_combined_msg.pose.pose.orientation.y = q_tmp[1]
             self.odom_combined_msg.pose.pose.orientation.z = q_tmp[2]
             self.odom_combined_msg.pose.pose.orientation.w = q_tmp[3]
+            self.odom_combined_msg.twist=self.odom_msg.twist
             self.odom_publisher.publish(self.odom_combined_msg)
             self.rate.sleep()
             rospy.loginfo("Published odom combined")
