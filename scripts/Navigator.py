@@ -12,8 +12,8 @@ class Navigator():
     def __init__(self):
         rospy.init_node('navigator', anonymous=True)
         self.vel_publisher = rospy.Publisher('cmd_vel/managed', Twist, queue_size=1)
-        self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_pos)
-        self.rate = rospy.Rate(10) # 10hz
+        self.odom_subscriber = rospy.Subscriber('/odom_combined', Odometry, self.update_pos)
+        self.rate = rospy.Rate(30) # 10hz
         self.pos_with_co = PoseWithCovariance()
         self.pos = Pose()
         self.going_to_goal = False

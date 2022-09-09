@@ -2,6 +2,7 @@ Real Rover tests :
 
 roslaunch nav_unit launch_real.launch
 rostopic pub -1 /goal geometry_msgs/Pose '{position: {x: 0.5, y: 0.0, z: 0.0}, orientation: {x: 0.0,y: 0.0,z: 0.0,w: 1.0}}'
+rostopic pub -r 5 /cmd_vel/managed geometry_msgs/Twist '{linear: {x: 0.3, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
 
 Simulation tests :

@@ -4,9 +4,14 @@
   <include file="$(find roverrobotics_driver)/launch/zero2.launch"/>
   <include file="$(find razor_imu_9dof)/launch/razor-pub.launch"/>
 
+  <!-- Run a python script to start the Odometer node -->
+  <node name="odometer" pkg="nav_unit" type="Odometer.py" respawn="true" output="screen">
+    <param name="is_sim" type="bool" value="false" />
+  </node>
+
   <!-- Run a python script to start the navigator node -->
   <node name="navigator" pkg="nav_unit" type="Navigator.py" respawn="true" output="screen">
-    <param name="is_sim" type="bool" value="true" />
+    <param name="is_sim" type="bool" value="false" />
   </node>
 
 </launch>
