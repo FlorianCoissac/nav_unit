@@ -45,7 +45,7 @@ class Odometer():
             if self.odom_msg.twist.twist.angular.z**2+self.odom_msg.twist.twist.linear.x**2<0.0001:
                 # If motors are off orientation is imu's yaw
                 self.yaw = self.imu_msg.yaw - self.init_yaw
-            elif self.odom_msg.twist.twist.linear.x**2<0.0001:
+            else:
                 # Then rover is turning around
                 self.yaw += self.odom_msg.twist.twist.angular.z*self.dt
 
@@ -64,7 +64,7 @@ class Odometer():
             self.odom_combined_msg.twist=self.odom_msg.twist
             self.odom_publisher.publish(self.odom_combined_msg)
             self.rate.sleep()
-            rospy.loginfo("Published odom combined")
+            rospy.spin()
             
 
 if __name__ == '__main__': # On running script, start the Odometer node

@@ -42,7 +42,7 @@ class Navigator():
                     vel_msg.linear.x = 0
                     self.vel_publisher.publish(vel_msg)
                 else:
-                    rospy.loginfo("Let's go !")
+                    rospy.loginfo("Let's go ! Rotation = " + str(Da*180/pi) + " degrees")
                     vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
                     vel_msg.linear.x = min(sqrt(Dx**2+Dy**2)*cos(Da), 1)
                     self.vel_publisher.publish(vel_msg)
