@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseWithCovariance, Pose
 from geometry_msgs.msg import TwistWithCovariance, Twist
-from razor_imu_9dof.msg import orientation
+from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from numpy import arctan2, pi, sqrt, cos, sin
 import tf
@@ -15,10 +15,11 @@ class Odometer():
         rospy.init_node('odometer', anonymous=True)
         self.odom_publisher = rospy.Publisher('/odom_combined', Odometry, queue_size=1)
         self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_odom)
-        self.imu_subscriber = rospy.Subscriber('orientation', orientation, self.update_imu)
+        self.imu_subscriber = rospy.Subscriber('/imu', Imu, self.update_imu)
         self.odom_combined_msg = Odometry()
         self.odom_msg = Odometry()
-        self.imu_msg = orientation()
+        self.imu_msg = Imu()
+        self.imu_yaw = 0.0
         self.previous_time = rospy.get_rostime().to_sec()
         self.pos_x = 0
         self.pos_y = 0
@@ -31,11 +32,13 @@ class Odometer():
 
     def update_imu(self, imu_data): # Whenever a new orientation is published by the imu, get it
         self.imu_msg = imu_data
+        explicit_quat = [self.imu_msg.orientation.x, self.imu_msg.orientation.y, self.imu_msg.orientation.z, self.imu_msg.orientation.w]
+        r, p, self.imu_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
         if self.init_yaw == 0:
-            self.init_yaw = imu_data.yaw
+            self.init_yaw = self.imu_yaw
 
     def broadcast(self): # Publish odom_combined whenever odom is received
-
+        rospy.loginfo("Initiated")
         while not rospy.is_shutdown():
             #Update time estimate
             now = rospy.get_rostime().to_sec()
@@ -44,7 +47,7 @@ class Odometer():
 
             if self.odom_msg.twist.twist.angular.z**2+self.odom_msg.twist.twist.linear.x**2<0.0001:
                 # If motors are off orientation is imu's yaw
-                self.yaw = self.imu_msg.yaw - self.init_yaw
+                self.yaw = self.imu_yaw - self.init_yaw
             else:
                 # Then rover is turning around
                 self.yaw += self.odom_msg.twist.twist.angular.z*self.dt
@@ -64,14 +67,10 @@ class Odometer():
             self.odom_combined_msg.twist=self.odom_msg.twist
             self.odom_publisher.publish(self.odom_combined_msg)
             self.rate.sleep()
-            rospy.spin()
+            rospy.loginfo("Broadcasting")
             
 
-if __name__ == '__main__': # On running script, start the Odometer node
-    try:
-        odometer = Odometer()
-        # Do something
-        odometer.broadcast()
-        rospy.spin()
-    except rospy.ROSInterruptException:
-        pass
+
+odometer = Odometer()
+# Do something
+odometer.broadcast()
