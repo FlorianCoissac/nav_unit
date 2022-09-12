@@ -116,10 +116,10 @@ class Navigator():
 
 
     def listen(self):
-        while not True in ['/robot_pose_ekf/odom_combined' in tops for tops in rospy.get_published_topics()]:
+        while not True in ['/robot_pose_ekf/odom_combined' in tops for tops in rospy.get_published_topics()] and not rospy.is_shutdown():
             rospy.logwarn("Navigator waiting for robot_pose_ekf to launch (topic robot_pose_ekf/odom_combined not received")
             rospy.sleep(1)
-        while not True in ['/imu' in tops for tops in rospy.get_published_topics()]:
+        while not True in ['/imu' in tops for tops in rospy.get_published_topics()] and not rospy.is_shutdown():
             rospy.logwarn("Navigator waiting for Imu to launch (topic /imu not received)")
             rospy.sleep(1)
         rospy.loginfo("Navigator is now launching and listening for goal input")
