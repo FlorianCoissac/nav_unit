@@ -18,11 +18,16 @@ class Navigator():
         self.pos = Pose()
         self.goals=[]
         self.going_to_goal = False
+        self.init_yaw = 0
         self.interrupt = False
 
     def update_pos(self, odom_data):
         self.pos_with_co = odom_data.pose
         self.pos = self.pos_with_co.pose
+        if self.init_yaw == 0:
+            explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
+            roll, pitch, self.init_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+        
 
     def got_new_trajectory(self, trajectory):
         if not self.going_to_goal:
@@ -73,6 +78,7 @@ class Navigator():
                 # Compute the vector towards goal
                 explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
                 roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+                yaw = yaw-self.init_yaw
                 Dx = goal.position.x - self.pos.position.x
                 Dy = goal.position.y - self.pos.position.y
                 Da = self.transfo2pipi(arctan2(Dy, Dx) - yaw)
@@ -91,12 +97,14 @@ class Navigator():
             # At that point the position is correct, let's get to the right orientation
             explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
             roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+            yaw = yaw-self.init_yaw
             explicit_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
             goal_roll, goal_pitch, goal_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
             Da = goal_yaw - yaw
             while Da**2>0.01 and not rospy.is_shutdown() and not self.interrupt:
                 explicit_quat = [self.pos.orientation.x, self.pos.orientation.y, self.pos.orientation.z, self.pos.orientation.w]
                 roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+                yaw = yaw-self.init_yaw
                 explicit_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
                 goal_roll, goal_pitch, goal_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 Da = self.transfo2pipi(goal_yaw - yaw)
