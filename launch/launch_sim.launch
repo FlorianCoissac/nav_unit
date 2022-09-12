@@ -5,11 +5,6 @@
     <arg name="world_name" value="$(find nav_unit)/gazebo_worlds/$(arg world_name).world" />
   </include>
 
-  <!-- Run a python script to start the Odometer node -->
-  <node name="odometer" pkg="nav_unit" type="Odometer.py" respawn="true" output="screen">
-    <param name="is_sim" type="bool" value="true" />
-  </node>
-
   <!-- Run a python script to start the navigator node -->
   <node name="navigator" pkg="nav_unit" type="Navigator.py" respawn="true" output="screen">
     <param name="is_sim" type="bool" value="true" />

@@ -2,7 +2,7 @@
 # license removed for brevity
 import rospy
 from std_msgs.msg import String
-from geometry_msgs.msg import PoseWithCovariance, Pose, PoseArray
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, PoseArray
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from numpy import arctan2, pi, sqrt, cos
@@ -12,9 +12,9 @@ class Navigator():
     def __init__(self):
         rospy.init_node('navigator', anonymous=True)
         self.vel_publisher = rospy.Publisher('cmd_vel/managed', Twist, queue_size=1)
-        self.odom_subscriber = rospy.Subscriber('/odom_combined', Odometry, self.update_pos)
+        self.odom_subscriber = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.update_pos)
         self.rate = rospy.Rate(30) # 10hz
-        self.pos_with_co = PoseWithCovariance()
+        self.pos_with_co = PoseWithCovarianceStamped()
         self.pos = Pose()
         self.goals=[]
         self.going_to_goal = False
@@ -116,13 +116,16 @@ class Navigator():
 
 
     def listen(self):
-        if True in ['/imu' in tops for tops in rospy.get_published_topics()]:
-            rospy.loginfo("Navigator is listening for goal input")
-            rospy.Subscriber("/trajectory", PoseArray, self.got_new_trajectory)
-            rospy.Subscriber("/goal", Pose, self.got_new_goal)
-            rospy.spin()
-        else:
-            rospy.loginfo("Odometry incomplete, please reconnect IMU sensor and execute 'roslaunch razor_imu_9dof razor-pub.launch' then try running Navigator.py again")
+        while not True in ['/robot_pose_ekf/odom_combined' in tops for tops in rospy.get_published_topics()]:
+            rospy.logwarn("Navigator waiting for robot_pose_ekf to launch (topic robot_pose_ekf/odom_combined not received")
+            rospy.sleep(1)
+        while not True in ['/imu' in tops for tops in rospy.get_published_topics()]:
+            rospy.logwarn("Navigator waiting for Imu to launch (topic /imu not received)")
+            rospy.sleep(1)
+        rospy.loginfo("Navigator is now launching and listening for goal input")
+        rospy.Subscriber("/trajectory", PoseArray, self.got_new_trajectory)
+        rospy.Subscriber("/goal", Pose, self.got_new_goal)
+        rospy.spin()
 
     def transfo2pipi(self, a):
         a = a%(2*pi)
@@ -132,4 +135,3 @@ class Navigator():
 
 nav = Navigator()
 nav.listen()
-
