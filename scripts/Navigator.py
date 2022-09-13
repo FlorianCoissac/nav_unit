@@ -15,6 +15,8 @@ class Navigator():
         self.odom_subscriber = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.update_pos)
         self.rate = rospy.Rate(30) # 10hz
         self.pos_with_co = PoseWithCovarianceStamped()
+        self.max_speed_linear = 0.5
+        self.max_speed_angular = 0.5
         self.pos = Pose()
         self.goals=[]
         self.going_to_goal = False
@@ -84,13 +86,13 @@ class Navigator():
                 Da = self.transfo2pipi(arctan2(Dy, Dx) - yaw)
                 if Da**2 > (pi/6)**2: # If the angle difference is too large, turn without going forward
                     rospy.loginfo("Turning " + str(Da*180/pi) + " degrees")
-                    vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
+                    vel_msg.angular.z = Da/min(sqrt(Da**2), self.max_speed_angular)
                     vel_msg.linear.x = 0
                     self.vel_publisher.publish(vel_msg)
                 else:
                     rospy.loginfo("Let's go ! Rotation = " + str(Da*180/pi) + " degrees")
-                    vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
-                    vel_msg.linear.x = min(sqrt(Dx**2+Dy**2)*cos(Da), 1)
+                    vel_msg.angular.z = Da/min(sqrt(Da**2), self.max_speed_angular)
+                    vel_msg.linear.x = min(sqrt(Dx**2+Dy**2)*cos(Da), self.max_speed_linear)
                     self.vel_publisher.publish(vel_msg)
                 self.rate.sleep()
 
@@ -109,7 +111,7 @@ class Navigator():
                 goal_roll, goal_pitch, goal_yaw = tf.transformations.euler_from_quaternion(explicit_quat)
                 Da = self.transfo2pipi(goal_yaw - yaw)
                 rospy.loginfo("Reorienting : " + str(Da*180/pi) + "degrees")
-                vel_msg.angular.z = Da/min(sqrt(Da**2), 1)
+                vel_msg.angular.z = Da/min(sqrt(Da**2), self.max_speed_angular)
                 vel_msg.linear.x = 0
                 self.vel_publisher.publish(vel_msg)
                 self.rate.sleep()
