@@ -9,13 +9,15 @@ from numpy import arctan2, pi, sqrt, cos, sin
 import tf
 
 class Odometer():
-    # This class works as a short term solution to getting a odom_combined topic using the /odom topic's
-    # wheel encoder-based estimate and the imu's magnetometer yaw estimate
+    # This class modifies measurements from sensors to feed them to robot_pose_efk.
+    # In the future Kalman filtering will be computed in this Odometer file.
     def __init__(self):
         rospy.init_node('odometer', anonymous=True)
-        self.odom_publisher = rospy.Publisher('/odom_combined', Odometry, queue_size=1)
+        self.odom_publisher = rospy.Publisher('odometer/odom_combined', Odometry, queue_size=1)
         self.odom_subscriber = rospy.Subscriber('/odom', Odometry, self.update_odom)
         self.imu_subscriber = rospy.Subscriber('/imu', Imu, self.update_imu)
+        self.imu_publisher = rospy.Publisher('odometer/imu', Imu, queue_size=1)
+        #self.odomcov_publisher = rospy.Publisher('odometer/odom_', Odometry, queue_size=1)
         self.odom_combined_msg = Odometry()
         self.odom_msg = Odometry()
         self.imu_msg = Imu()
@@ -40,18 +42,27 @@ class Odometer():
     def broadcast(self): # Publish odom_combined whenever odom is received
         rospy.loginfo("Initiated")
         while not rospy.is_shutdown():
+
+            # ---_------- Covariance for EKF ----------- #
+            # Imu covariance when motors are on
+            self.imu_pub_msg = self.imu_msg
+            if self.odom_msg.twist.twist.linear.x**2 + self.odom_msg.twist.twist.angular.z**2 > 0.001: # If motors are on
+                self.imu_pub_msg.orientation_covariance[8] = 1000.0
+                self.imu_pub_msg.orientation_covariance[4] = 1000.0
+                self.imu_pub_msg.orientation_covariance[0] = 1000.0
+            self.imu_publisher.publish(self.imu_pub_msg)
+
+            # ------------- Dummy odometry ------------- #
             #Update time estimate
             now = rospy.get_rostime().to_sec()
             self.dt = now-self.previous_time
             self.previous_time = now
-
             if self.odom_msg.twist.twist.angular.z**2+self.odom_msg.twist.twist.linear.x**2<0.0001:
                 # If motors are off orientation is imu's yaw
                 self.yaw = self.imu_yaw - self.init_yaw
             else:
                 # Then rover is turning around
                 self.yaw += self.odom_msg.twist.twist.angular.z*self.dt
-
             # Now update linear
             cur_vel = self.odom_msg.twist.twist.linear.x
             # Simple estimate for the updated position
