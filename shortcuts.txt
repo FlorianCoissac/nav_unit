@@ -9,9 +9,3 @@ Simulation tests :
 
 conda activate ros
 roslaunch nav_unit launch_sim.launch world_name:="test_world"
-
-
-Launch vb-tool : 
-
-conda activate vb-ws
-... (pack in a launch file or a few ones at least)
